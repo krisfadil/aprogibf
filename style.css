@@ -1,0 +1,21 @@
+:root { color-scheme: light; --blue: #2025ad; --accent: #78a0f7; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--blue); color: white; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.page { width: min(100% - 36px, 520px); min-height: 100vh; margin: auto; padding: 42px 0 22px; display: flex; flex-direction: column; align-items: stretch; }
+.identity { text-align: center; margin-bottom: 27px; }
+.logo { display: block; width: 144px; height: 144px; margin: 0 auto 22px; border-radius: 50%; object-fit: cover; background: white; border: 7px solid white; }
+h1 { margin: 0; font-size: 27px; font-weight: 650; letter-spacing: -.03em; }
+.identity p { margin: 3px 0 0; font-size: 16px; font-weight: 550; }
+.links { display: grid; gap: 10px; }
+.link { min-height: 76px; padding: 12px 15px; display: flex; gap: 16px; align-items: center; border-radius: 8px; background: white; color: #252536; text-decoration: none; font-size: 17px; box-shadow: 0 2px 5px #10156d2b; transition: transform .15s, box-shadow .15s; }
+.link:hover, .link:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 16px #10156d50; outline: 3px solid #b9d3ff; outline-offset: 2px; }
+.icon { width: 46px; height: 46px; border-radius: 6px; flex: 0 0 46px; display: grid; place-items: center; background: var(--accent); color: #14257f; font-weight: 800; font-size: 21px; }
+.linkedin { font-size: 16px; } .youtube { font-size: 18px; }
+.link small { display: block; color: #707080; font-size: 12px; margin-top: 1px; }
+.arrow { margin-left: auto; font-size: 20px; color: #73758d; }
+.email { align-self: center; margin: 30px 0 0; min-height: 44px; display: flex; align-items: center; gap: 9px; color: white; text-decoration: none; font-size: 23px; }
+.email span:last-child { font-size: 14px; }
+.email:hover { text-decoration: underline; }
+footer { margin-top: auto; padding-top: 35px; text-align: center; color: #d8dbff; font-size: 11px; opacity: .8; }
+@media (min-height: 760px) { .page { padding-top: 56px; } .identity { margin-bottom: 28px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
