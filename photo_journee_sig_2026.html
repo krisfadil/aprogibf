@@ -261,6 +261,21 @@
 		nameInput.addEventListener('input',draw);
 		zoomInput.addEventListener('input',()=>{scale=Number(zoomInput.value);draw()});
 
+		function canvasPoint(e) {
+		  const rect = canvas.getBoundingClientRect();
+		  return {
+			x: (e.clientX - rect.left) * canvas.width / rect.width,
+			y: (e.clientY - rect.top) * canvas.height / rect.height
+		  };
+		}
+
+
+		
+		//Gestion du zoom tactile
+		const pointers = new Map();
+		let drag = null;
+		let pinchStartDistance = 0;
+		let pinchStartScale = 1;
 
 		function canvasPoint(e) {
 		  const rect = canvas.getBoundingClientRect();
@@ -270,76 +285,75 @@
 		  };
 		}
 
+		function pointerDistance(a, b) {
+		  return Math.hypot(a.x - b.x, a.y - b.y);
+		}
+
 		canvas.addEventListener('pointerdown', e => {
 		  if (!portrait) return;
 		  e.preventDefault();
 		  canvas.setPointerCapture(e.pointerId);
 
 		  const point = canvasPoint(e);
-		  drag = {
-			x: point.x,
-			y: point.y,
-			ox: offsetX,
-			oy: offsetY
-		  };
+		  pointers.set(e.pointerId, point);
+
+		  if (pointers.size === 1) {
+			drag = { point, ox: offsetX, oy: offsetY };
+		  } else if (pointers.size === 2) {
+			const [a, b] = [...pointers.values()];
+			pinchStartDistance = pointerDistance(a, b);
+			pinchStartScale = scale;
+			drag = null;
+		  }
 		});
 
 		canvas.addEventListener('pointermove', e => {
-		  if (!drag) return;
+		  if (!pointers.has(e.pointerId)) return;
 		  e.preventDefault();
 
-		  const point = canvasPoint(e);
-		  offsetX = drag.ox + point.x - drag.x;
-		  offsetY = drag.oy + point.y - drag.y;
+		  pointers.set(e.pointerId, canvasPoint(e));
+
+		  if (pointers.size === 1 && drag) {
+			const point = pointers.get(e.pointerId);
+			offsetX = drag.ox + point.x - drag.point.x;
+			offsetY = drag.oy + point.y - drag.point.y;
+		  } else if (pointers.size === 2 && pinchStartDistance > 0) {
+			const [a, b] = [...pointers.values()];
+			const factor = pointerDistance(a, b) / pinchStartDistance;
+
+			scale = Math.max(1, Math.min(2.5, pinchStartScale * factor));
+			zoomInput.value = scale;
+		  }
+
 		  draw();
 		});
 
-		function stopDrag() {
+		function endPointer(e) {
+		  pointers.delete(e.pointerId);
 		  drag = null;
+
+		  if (pointers.size === 2) {
+			const [a, b] = [...pointers.values()];
+			pinchStartDistance = pointerDistance(a, b);
+			pinchStartScale = scale;
+		  } else {
+			pinchStartDistance = 0;
+		  }
 		}
 
-		canvas.addEventListener('pointerup', stopDrag);
-		canvas.addEventListener('pointercancel', stopDrag);
-		canvas.addEventListener('lostpointercapture', stopDrag);
+		canvas.addEventListener('pointerup', endPointer);
+		canvas.addEventListener('pointercancel', endPointer);
+		canvas.addEventListener('lostpointercapture', endPointer);
+
+		
+		
+		
+		
+
+
+
 
 		downloadBtn.addEventListener('click',()=>{draw();
-		
-		function distanceBetweenTouches(e) {
-		  const rect = canvas.getBoundingClientRect();
-		  const a = e.touches[0];
-		  const b = e.touches[1];
-
-		  const dx = (a.clientX - b.clientX) * canvas.width / rect.width;
-		  const dy = (a.clientY - b.clientY) * canvas.height / rect.height;
-
-		  return Math.hypot(dx, dy);
-		}
-
-		canvas.addEventListener('touchstart', e => {
-		  if (!portrait || e.touches.length !== 2) return;
-		  e.preventDefault();
-
-		  pinchStartDistance = distanceBetweenTouches(e);
-		  pinchStartScale = scale;
-		}, { passive: false });
-
-		canvas.addEventListener('touchmove', e => {
-		  if (!portrait || e.touches.length !== 2 || !pinchStartDistance) return;
-		  e.preventDefault();
-
-		  const factor = distanceBetweenTouches(e) / pinchStartDistance;
-		  scale = Math.max(1, Math.min(2.5, pinchStartScale * factor));
-		  zoomInput.value = scale;
-		  draw();
-		}, { passive: false });
-
-		function endPinch(e) {
-		  if (e.touches.length < 2) pinchStartDistance = null;
-		}
-
-		canvas.addEventListener('touchend', endPinch);
-		canvas.addEventListener('touchcancel', endPinch);
-		
 		const a=document.createElement('a');a.download='Ma-participation-Journee-SIG-2026.png';a.href=canvas.toDataURL('image/png');a.click()});
 		logo.onload=draw;draw();
 	</script>
