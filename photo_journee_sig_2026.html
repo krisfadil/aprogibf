@@ -17,7 +17,20 @@ input[type=file]{width:100%;font-size:14px}input[type=range]{width:100%;accent-c
 .help{font-size:12px;color:#66677c;line-height:1.5;margin-top:6px}
 button{width:100%;border:0;border-radius:11px;background:var(--orange);color:white;padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}.preview h2{margin:0 0 12px;font-size:18px}
-canvas{display:block;width:100%;height:auto;max-width:720px;margin:auto;border-radius:12px;background:var(--blue)}
+
+canvas{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:720px;
+  margin:auto;
+  border-radius:12px;
+  background:var(--blue);
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
 .preview-note{text-align:center;color:#77788b;font-size:12px;margin:10px 0 0}
 @media(max-width:760px){main{grid-template-columns:1fr;margin:14px auto}.preview{order:2}.panel{order:1}}
 </style>
@@ -121,9 +134,50 @@ photoInput.addEventListener('change',e=>{
 });
 [nameInput,phraseInput].forEach(el=>el.addEventListener('input',draw));
 zoomInput.addEventListener('input',()=>{scale=Number(zoomInput.value);draw()});
-canvas.addEventListener('pointerdown',e=>{if(!portrait)return;canvas.setPointerCapture(e.pointerId);drag={x:e.offsetX*1080/canvas.clientWidth,y:e.offsetY*1080/canvas.clientHeight,ox:offsetX,oy:offsetY}});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;const px=e.offsetX*1080/canvas.clientWidth,py=e.offsetY*1080/canvas.clientHeight;offsetX=drag.ox+(px-drag.x);offsetY=drag.oy+(py-drag.y);draw()});
-canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+
+
+function canvasPoint(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * canvas.width / rect.width,
+    y: (e.clientY - rect.top) * canvas.height / rect.height
+  };
+}
+
+canvas.addEventListener('pointerdown', e => {
+  if (!portrait) return;
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+
+  const point = canvasPoint(e);
+  drag = {
+    x: point.x,
+    y: point.y,
+    ox: offsetX,
+    oy: offsetY
+  };
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!drag) return;
+  e.preventDefault();
+
+  const point = canvasPoint(e);
+  offsetX = drag.ox + point.x - drag.x;
+  offsetY = drag.oy + point.y - drag.y;
+  draw();
+});
+
+function stopDrag() {
+  drag = null;
+}
+
+canvas.addEventListener('pointerup', stopDrag);
+canvas.addEventListener('pointercancel', stopDrag);
+canvas.addEventListener('lostpointercapture', stopDrag);
+
+
+
 downloadBtn.addEventListener('click',()=>{draw();const a=document.createElement('a');a.download='Ma-participation-Journee-SIG-2026.png';a.href=canvas.toDataURL('image/png');a.click()});
 logo.onload=draw;draw();
 </script>
